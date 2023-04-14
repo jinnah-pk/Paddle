@@ -1,0 +1,36 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 57062bd..df5dd03 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -4,11 +4,17 @@ ELSE()
+     cmake_minimum_required(VERSION 3.10)
+ ENDIF()
+ 
++
+ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+ 
+-project(ctc_release LANGUAGES CXX CUDA)
+-set(CMAKE_CXX_STANDARD 11)
+-set(CMAKE_CUDA_STANDARD 11)
++IF (${CUDA_FOUND})
++    project(ctc_release LANGUAGES CXX CUDA)
++    set(CMAKE_CXX_STANDARD 11)
++    set(CMAKE_CUDA_STANDARD 11)
++ELSE()
++    project(ctc_release LANGUAGES CXX)
++    set(CMAKE_CXX_STANDARD 11)
++ENDIF()
+ 
+ include_directories(include)
+ 
+@@ -20,8 +26,8 @@ MESSAGE(STATUS "Torch found ${Torch_DIR}")
+ 
+ option(WITH_GPU     "compile warp-ctc with CUDA."     ${CUDA_FOUND})
+ option(WITH_TORCH   "compile warp-ctc with Torch."    ${Torch_FOUND})
+-option(WITH_OMP     "compile warp-ctc with OpenMP."   ON)
+-option(BUILD_TESTS  "build warp-ctc unit tests."      ON)
++option(WITH_OMP     "compile warp-ctc with OpenMP."   OFF)
++option(BUILD_TESTS  "build warp-ctc unit tests."      OFF)
+ option(BUILD_SHARED "build warp-ctc shared library."  ON)
+ option(WITH_ROCM     "Compile PaddlePaddle with ROCM platform"             OFF)
+ 

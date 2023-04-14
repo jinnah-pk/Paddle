@@ -15,6 +15,22 @@
         "type": "github"
       }
     },
+    "dlpackSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1674569409,
+        "narHash": "sha256-5XOMDb0r9N2hO9JJzRHHu4wZKP1xwajIoO6GQf3KqIA=",
+        "owner": "dmlc",
+        "repo": "dlpack",
+        "rev": "ca4d00ad3e2e0f410eeab3264d21b8a39397f362",
+        "type": "github"
+      },
+      "original": {
+        "owner": "dmlc",
+        "repo": "dlpack",
+        "type": "github"
+      }
+    },
     "libtorch": {
       "inputs": {
         "devshell": "devshell",
@@ -22,15 +38,16 @@
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1678991560,
-        "narHash": "sha256-Csq2D2Ck+/wGgnPAXBcPs/0lE0WAe77D3mFgi5o7dr4=",
+        "lastModified": 1678996402,
+        "narHash": "sha256-zJQHlZsJfQtH37OGGW+Iyr3giFD5vYf1DsdtNwOzpkY=",
         "owner": "jinnah-pk",
         "repo": "libtorch-nix",
-        "rev": "3477247cf173d10c59d60381b01a5a5647ef9b67",
+        "rev": "f8ec957879abd370e7c91c8e4ff68eea64a8f3cf",
         "type": "github"
       },
       "original": {
         "owner": "jinnah-pk",
+        "ref": "main",
         "repo": "libtorch-nix",
         "type": "github"
       }
@@ -66,6 +83,7 @@
     },
     "root": {
       "inputs": {
+        "dlpackSrc": "dlpackSrc",
         "libtorch": "libtorch",
         "nixpkgs": "nixpkgs_2",
         "threadPoolSrc": "threadPoolSrc",

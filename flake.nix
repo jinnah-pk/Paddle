@@ -7,8 +7,10 @@
   inputs.threadPoolSrc.flake = false;
   inputs.warpctcSrc.url = "github:baidu-research/warp-ctc";
   inputs.warpctcSrc.flake = false;
-  inputs.libtorch.url = "github:jinnah-pk/libtorch-nix";
-  outputs = inputs@{ self, nixpkgs, threadPoolSrc, warpctcSrc, libtorch, ... }:
+  inputs.libtorch.url = "github:jinnah-pk/libtorch-nix/main";
+  inputs.dlpackSrc.url = "github:dmlc/dlpack";
+  inputs.dlpackSrc.flake = false;
+  outputs = inputs@{ self, nixpkgs, threadPoolSrc, warpctcSrc, libtorch, dlpackSrc, ... }:
     let
 
       # to work with older version of flakes
@@ -33,12 +35,18 @@
       # A Nixpkgs overlay.
       overlay = final: prev: {
 
+        dlpack = with final; stdenv.mkDerivation {
+          name = "dlpack";
+          src = dlpackSrc;
+          nativeBuildInputs = [ cmake git ];
+        };
         warpctc = with final; stdenv.mkDerivation rec {
           pname = "warp-ctc";
           version = "1.0";
           src = warpctcSrc.outPath;
-          nativeBuildInputs = [ cmake ninja clang ];
-          buildInputs = [ libtorch.defaultPackage.${system} ];
+          nativeBuildInputs = [ cmake ninja luajit ];
+          buildInputs = [];
+          patches = [ ./nix/warp-ctc.patch ];
         };
         threadPool  = with final; stdenv.mkDerivation rec {
           pname = "thread-pool";
@@ -50,13 +58,15 @@
             cp -r $src/ $out/include
           '';
         };
-        helloEnv = final.python3.withPackages (ps: with ps; [ wheel pip numpy protobuf pyyaml jinja2 ]);
-        hello = with final; stdenv.mkDerivation rec {
+        paddleEnv = final.python3.withPackages (ps: with ps; [
+          wheel pip numpy protobuf pyyaml jinja2 typing-extensions
+        ]);
+        paddle = with final; stdenv.mkDerivation rec {
           pname = "PaddlePaddle";
           inherit version;
           src = ./.;
-          nativeBuildInputs = [ cmake ninja helloEnv protobuf gflags eigen threadPool warpctc ];
-          buildInputs = [ git cacert helloEnv ];
+          nativeBuildInputs = [ cmake ninja paddleEnv ];
+          buildInputs = [ git cacert paddleEnv protobuf gflags eigen threadPool warpctc dlpack ];
         };
 
       };
@@ -64,21 +74,21 @@
       # Provide some binary packages for selected system types.
       packages = forAllSystems (system:
         {
-          inherit (nixpkgsFor.${system}) hello;
+          inherit (nixpkgsFor.${system}) paddle;
         });
 
       # The default package for 'nix build'. This makes sense if the
       # flake provides only one package or there is a clear "main"
       # package.
-      defaultPackage = forAllSystems (system: self.packages.${system}.hello);
+      defaultPackage = forAllSystems (system: self.packages.${system}.paddle);
 
       # A NixOS module, if applicable (e.g. if the package provides a system service).
-      nixosModules.hello =
+      nixosModules.paddle =
         { pkgs, ... }:
         {
           nixpkgs.overlays = [ self.overlay ];
 
-          environment.systemPackages = [ pkgs.hello ];
+          environment.systemPackages = [ pkgs.paddle ];
 
           #systemd.services = { ... };
         };
@@ -89,20 +99,20 @@
           with nixpkgsFor.${system};
 
           {
-            inherit (self.packages.${system}) hello;
+            inherit (self.packages.${system}) paddle;
 
             # Additional tests, if applicable.
             test = stdenv.mkDerivation {
-              pname = "hello-test";
+              pname = "paddle-test";
               inherit version;
 
-              buildInputs = [ hello ];
+              buildInputs = [ paddle ];
 
               dontUnpack = true;
 
               buildPhase = ''
                 echo 'running some integration tests'
-                [[ $(hello) = 'Hello Nixers!' ]]
+                [[ $(paddle) = 'Paddle Nixers!' ]]
               '';
 
               installPhase = "mkdir -p $out";
@@ -119,7 +129,7 @@
               makeTest {
                 nodes = {
                   client = { ... }: {
-                    imports = [ self.nixosModules.hello ];
+                    imports = [ self.nixosModules.paddle ];
                   };
                 };
 
@@ -127,7 +137,7 @@
                   ''
                     start_all()
                     client.wait_for_unit("multi-user.target")
-                    client.succeed("hello")
+                    client.succeed("paddle")
                   '';
               };
           }

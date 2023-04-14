@@ -20,6 +20,8 @@ limitations under the License. */
 #include <string>
 #include <vector>
 
+#include "glog/logging.h"
+
 #include "paddle/phi/backends/gpu/gpu_context.h"
 #include "paddle/phi/common/memory_utils.h"
 #include "paddle/phi/kernels/autotune/cache.h"
@@ -148,19 +150,18 @@ struct ConvArgsBase {
     auto w_shape = phi::vectorize(w->dims());
     VLOG(10) << "[ConvArgs] x_dims=" << x_shape << ", w_dims=" << w_shape
              << ", strides=" << s << ", paddings=" << p << ", dilations=" << d
-             << ", data=" << paddle::experimental::CppTypeToDataType<T>::Type()
+             << ", data=" << phi::CppTypeToDataType<T>::Type()
              << ", group=" << group
              << ", data layout=" << static_cast<int64_t>(data_layout);
 
-    return phi::autotune::ConvCacheKey(
-        x_shape,
-        w_shape,
-        p,
-        s,
-        d,
-        paddle::experimental::CppTypeToDataType<T>::Type(),
-        group,
-        static_cast<int64_t>(data_layout));
+    return phi::autotune::ConvCacheKey(x_shape,
+                                       w_shape,
+                                       p,
+                                       s,
+                                       d,
+                                       phi::CppTypeToDataType<T>::Type(),
+                                       group,
+                                       static_cast<int64_t>(data_layout));
   }
 };
 
